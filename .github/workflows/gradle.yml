@@ -5,7 +5,7 @@
 # This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
 
-name: Rust test compile and Upload
+name: Rust CD
 
 on:
   push:
@@ -41,6 +41,8 @@ jobs:
         uses: ATiltedTree/setup-rust@v1.0.5
         with:
           rust-version: stable
+      - name: Win64 Target
+        run: rustup target add x86_64-pc-windows-gnu
       - name: Build
         uses: actions-rs/cargo@v1
         with:
@@ -58,6 +60,8 @@ jobs:
         uses: ATiltedTree/setup-rust@v1.0.5
         with:
           rust-version: stable
+      - name: linux64 Target
+        run: rustup target add x86_64-unknown-linux-gnu
       - name: Build
         uses: actions-rs/cargo@v1
         with:
@@ -75,6 +79,8 @@ jobs:
         uses: ATiltedTree/setup-rust@v1.0.5
         with:
           rust-version: stable
+      - name: linuxARM64 Target
+        run: rustup target add armv7-unknown-linux-musleabihf
       - name: Build
         uses: actions-rs/cargo@v1
         with:
