@@ -1,3 +1,7 @@
+use crate::code::print;
+
+mod code;
+
 fn main() {
-    println!("Hello, world!");
+    print("Outsourced Code Test");
 }
