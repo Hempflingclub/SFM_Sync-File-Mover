@@ -1,0 +1,64 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+# This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
+
+name: Rust test compile and Upload
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+permissions:
+  contents: read
+
+jobs:
+  test_compile-and-Upload:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Rust
+        # You may pin to the exact commit or the version.
+        # uses: ATiltedTree/setup-rust@749afc283f2b846eb90a670e757de9da4da091f7
+        uses: ATiltedTree/setup-rust@v1.0.5
+        with:
+          # The version to install
+          rust-version: stable
+          # The components to install
+          #components: # optional
+          # The targets to install
+      #    targets: x86_64-pc-windows-gnu armv7-unknown-linux-musleabihf
+      #- name: Set up MinGW
+      #  uses: egor-tensin/setup-mingw@v2
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: -r #--target x86_64-pc-windows-gnu --target armv7-unknown-linux-musleabihf
+      - name: Testing
+        run: cargo run >> $GITHUB_STEP_SUMMARY
+      - name: 7z Compression
+        uses: edgarrc/action-7z@v1
+        with:
+          args: 7z a -t7z -mx=9 build.7z ./target/
+      #- name: Upload Build Artifact
+      #  uses: actions/upload-artifact@v3.1.0
+      #  with:
+      #    path: build/libs/*.jar
+      - name: Upload to Gofile # Avoiding File Limits of Github
+        run: ./.github/scripts/upload.sh build.7z
+        shell: bash
+      - name: Clean Workspace
+        run: rm -rf ./*
+      #- name: Delete Branch Cache
+      #  uses: snnaplab/delete-branch-cache-action@v1.0.0
+      #  with:
+      #    github-token: ${{ secrets.TOKEN }}
