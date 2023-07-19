@@ -21,7 +21,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v3
       - name: Setup Rust
@@ -33,7 +33,7 @@ jobs:
   win64:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     needs: test
     steps:
       - name: Build
@@ -45,7 +45,7 @@ jobs:
   linux64:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     needs: test
     steps:
       - name: Build
@@ -57,7 +57,7 @@ jobs:
   linuxARM64:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     needs: test
     steps:
       - name: Build
