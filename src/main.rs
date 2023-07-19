@@ -1,7 +1,9 @@
-use crate::code::print;
+use crate::file_handler::{Mover, MvObj};
 
-mod code;
+mod file_handler;
 
 fn main() {
-    print("Outsourced Code Test");
+    let movable_test= MvObj::create_ref_str(".","..","*",false);
+    movable_test.print_info();
+    movable_test.print_src_files();
 }
