@@ -18,10 +18,22 @@ permissions:
   contents: read
 
 jobs:
-  test_compile-and-Upload:
+  test:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Rust
+        uses: ATiltedTree/setup-rust@v1.0.5
+        with:
+          rust-version: stable
+      - name: Testing
+        run: cargo run && cargo run >> $GITHUB_STEP_SUMMARY
+  compile-and-Upload:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v3
       - name: Setup Rust
@@ -43,8 +55,6 @@ jobs:
           use-cross: true
           command: build
           args: -r #--target x86_64-pc-windows-gnu --target armv7-unknown-linux-musleabihf
-      - name: Testing
-        run: cargo run >> $GITHUB_STEP_SUMMARY
       - name: 7z Compression
         uses: edgarrc/action-7z@v1
         with:
