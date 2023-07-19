@@ -21,7 +21,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - uses: actions/checkout@v3
       - name: Setup Rust
@@ -36,6 +36,11 @@ jobs:
       contents: write
     needs: test
     steps:
+      - uses: actions/checkout@v3
+      - name: Setup Rust
+        uses: ATiltedTree/setup-rust@v1.0.5
+        with:
+          rust-version: stable
       - name: Build
         uses: actions-rs/cargo@v1
         with:
@@ -48,6 +53,11 @@ jobs:
       contents: write
     needs: test
     steps:
+      - uses: actions/checkout@v3
+      - name: Setup Rust
+        uses: ATiltedTree/setup-rust@v1.0.5
+        with:
+          rust-version: stable
       - name: Build
         uses: actions-rs/cargo@v1
         with:
@@ -60,6 +70,11 @@ jobs:
       contents: write
     needs: test
     steps:
+      - uses: actions/checkout@v3
+      - name: Setup Rust
+        uses: ATiltedTree/setup-rust@v1.0.5
+        with:
+          rust-version: stable
       - name: Build
         uses: actions-rs/cargo@v1
         with:
