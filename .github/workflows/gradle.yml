@@ -44,6 +44,10 @@ jobs:
           target: x86_64-pc-windows-gnu
           override: true
           profile: minimal # minimal component installation (ie, no documentation)
+      - name: MinGW
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
       - name: Build
         uses: actions-rs/cargo@v1
         with:
@@ -104,6 +108,10 @@ jobs:
           use-cross: false
           command: build
           args: -r --target aarch64-unknown-linux-musl
+      - name: MinGW
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
       - name: 7z Compression
         uses: edgarrc/action-7z@v1
         with:
