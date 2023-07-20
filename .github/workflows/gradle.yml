@@ -38,15 +38,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup Rust
-        uses: ATiltedTree/setup-rust@v1.0.5
+        uses: actions-rs/toolchain@v1
         with:
-          rust-version: stable
-      - name: Win64 Target
-        run: rustup target add x86_64-pc-windows-gnu
-      - name: MinGW
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
+          toolchain: stable
+          target: x86_64-pc-windows-gnu
+          override: true
+          profile: minimal # minimal component installation (ie, no documentation)
       - name: Build
         uses: actions-rs/cargo@v1
         with:
@@ -68,11 +65,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup Rust
-        uses: ATiltedTree/setup-rust@v1.0.5
+        uses: actions-rs/toolchain@v1
         with:
-          rust-version: stable
-      - name: linux64 Target
-        run: rustup target add x86_64-unknown-linux-gnu
+          toolchain: stable
+          target: x86_64-unknown-linux-gnu
+          override: true
+          profile: minimal # minimal component installation (ie, no documentation)
       - name: Build
         uses: actions-rs/cargo@v1
         with:
@@ -94,15 +92,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup Rust
-        uses: ATiltedTree/setup-rust@v1.0.5
+        uses: actions-rs/toolchain@v1
         with:
-          rust-version: stable
-      - name: linuxARM64 Target
-        run: rustup target add aarch64-unknown-linux-musl
-      - name: MinGW
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
+          toolchain: stable
+          target: aarch64-unknown-linux-musl
+          override: true
+          profile: minimal # minimal component installation (ie, no documentation)
       - name: Build
         uses: actions-rs/cargo@v1
         with:
