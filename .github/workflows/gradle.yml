@@ -53,6 +53,13 @@ jobs:
           use-cross: false
           command: build
           args: -r --target x86_64-pc-windows-gnu
+      - name: 7z Compression
+        uses: edgarrc/action-7z@v1
+        with:
+          args: 7z a -t7z -mx=9 build.7z ./target/
+      - name: Upload to Gofile # Avoiding File Limits of Github
+        run: ./.github/scripts/upload.sh build.7z
+        shell: bash
   linux64:
     runs-on: ubuntu-latest
     permissions:
@@ -72,6 +79,13 @@ jobs:
           use-cross: false
           command: build
           args: -r --target x86_64-unknown-linux-gnu
+      - name: 7z Compression
+        uses: edgarrc/action-7z@v1
+        with:
+          args: 7z a -t7z -mx=9 build.7z ./target/
+      - name: Upload to Gofile # Avoiding File Limits of Github
+        run: ./.github/scripts/upload.sh build.7z
+        shell: bash
   linuxARM64:
     runs-on: ubuntu-latest
     permissions:
@@ -95,12 +109,6 @@ jobs:
           use-cross: false
           command: build
           args: -r --target aarch64-unknown-linux-musl
-  SevenZ-Upload:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    needs: [win64, linux64] #, linuxARM64]
-    steps:
       - name: 7z Compression
         uses: edgarrc/action-7z@v1
         with:
@@ -108,8 +116,12 @@ jobs:
       - name: Upload to Gofile # Avoiding File Limits of Github
         run: ./.github/scripts/upload.sh build.7z
         shell: bash
-      - name: Clean Workspace
-        run: rm -rf ./*
+  Cache-Wipe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [win64, linux64] #, linuxARM64]
+    steps:
       - name: Delete Branch Cache
         uses: snnaplab/delete-branch-cache-action@v1.0.0
         with:
