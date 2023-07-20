@@ -88,37 +88,6 @@ jobs:
       - name: Upload to Gofile # Avoiding File Limits of Github
         run: ./.github/scripts/upload.sh build.7z
         shell: bash
-  linuxARM64:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    needs: test
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: aarch64-unknown-linux-musl
-          override: true
-          profile: minimal # minimal component installation (ie, no documentation)
-      - name: MinGW
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
-      - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: false
-          command: build
-          args: -r --target aarch64-unknown-linux-musl
-      - name: 7z Compression
-        uses: edgarrc/action-7z@v1
-        with:
-          args: 7z a -t7z -mx=9 build.7z ./target/
-      - name: Upload to Gofile # Avoiding File Limits of Github
-        run: ./.github/scripts/upload.sh build.7z
-        shell: bash
   Cache-Wipe:
     runs-on: ubuntu-latest
     permissions:
