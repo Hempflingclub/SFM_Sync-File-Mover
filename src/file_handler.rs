@@ -12,7 +12,8 @@ pub trait Mover {
     fn create(source: String, target: String, pattern: String, exclude: bool) -> MvObj;
     fn create_ref_str(source: &str, target: &str, pattern: &str, exclude: bool) -> MvObj;
     fn print_src_files(&self);
-    fn get_file_paths(&self) -> Vec<String>;
+    fn print_target_files(&self);
+    fn get_file_paths(&self, path: &String) -> Vec<String>;
     fn is_part_of_pattern(&self, path: &String) -> bool;
 }
 
@@ -29,13 +30,19 @@ impl Mover for MvObj {
         Self::create(source.to_string(), target.to_string(), pattern.to_string(), exclude)
     }
     fn print_src_files(&self) {
-        let paths: Vec<String> = self.get_file_paths();
+        let paths: Vec<String> = self.get_file_paths(&self.source.to_string());
         for path in paths {
             println!("Path: {}", path);
         }
     }
-    fn get_file_paths(&self) -> Vec<String> {
-        let path = Path::new(self.source.as_str());
+    fn print_target_files(&self) {
+        let paths: Vec<String> = self.get_file_paths(&self.target.to_string());
+        for path in paths {
+            println!("Path: {}", path);
+        }
+    }
+    fn get_file_paths(&self, path: &String) -> Vec<String> {
+        let path = Path::new(path.as_str());
         let result = path.read_dir();
         let mut file_paths: Vec<String> = vec![];
         match result {
