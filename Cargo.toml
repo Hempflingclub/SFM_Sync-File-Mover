@@ -7,3 +7,10 @@ edition = "2021"
 
 [dependencies]
 regex = "1.9.1"
+
+[profile.release]
+opt-level = 3
+debug = 0
+debug-assertions = false
+lto = true
+incremental = false
