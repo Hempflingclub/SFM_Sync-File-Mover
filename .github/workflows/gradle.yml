@@ -38,12 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: $TARGET
-          override: true
-          profile: minimal # minimal component installation (ie, no documentation)
+        run: rustup target add $TARGET
       - name: MinGW
         uses: egor-tensin/setup-mingw@v2
         with:
@@ -69,12 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: $TARGET
-          override: true
-          profile: minimal # minimal component installation (ie, no documentation)
+        run: rustup target add $TARGET
       - name: Build
         uses: actions-rs/cargo@v1
         with:
@@ -96,12 +86,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: $TARGET
-          override: true
-          profile: minimal # minimal component installation (ie, no documentation)
+        run: rustup target add $TARGET
       - name: MinGW
         uses: egor-tensin/setup-mingw@v2
         with:
