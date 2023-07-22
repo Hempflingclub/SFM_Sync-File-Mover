@@ -44,7 +44,7 @@ jobs:
         with:
           platform: x64
       - name: Build
-        run: cargo -r --target $TARGET
+        run: cargo build -r --target $TARGET
       - name: 7z Compression
         uses: edgarrc/action-7z@v1
         with:
@@ -62,7 +62,7 @@ jobs:
       - name: Setup Rust
         run: rustup target add $TARGET
       - name: Build
-        run: cargo -r --target $TARGET
+        run: cargo build -r --target $TARGET
       - name: 7z Compression
         uses: edgarrc/action-7z@v1
         with:
@@ -91,7 +91,7 @@ jobs:
           linker = "aarch64-linux-gnu-gcc"
           EOF
       - name: Build
-        run: cargo -r --target $TARGET
+        run: cargo build -r --target $TARGET
       - name: 7z Compression
         uses: edgarrc/action-7z@v1
         with:
