@@ -44,11 +44,7 @@ jobs:
         with:
           platform: x64
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: -r --target $TARGET
+        run: cargo -r --target $TARGET
       - name: 7z Compression
         uses: edgarrc/action-7z@v1
         with:
@@ -66,11 +62,7 @@ jobs:
       - name: Setup Rust
         run: rustup target add $TARGET
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: -r --target $TARGET
+        run: cargo -r --target $TARGET
       - name: 7z Compression
         uses: edgarrc/action-7z@v1
         with:
@@ -99,11 +91,7 @@ jobs:
           linker = "aarch64-linux-gnu-gcc"
           EOF
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: false
-          command: build
-          args: -r --target $TARGET
+        run: cargo -r --target $TARGET
       - name: 7z Compression
         uses: edgarrc/action-7z@v1
         with:
