@@ -39,14 +39,14 @@ jobs:
       - uses: actions/checkout@v3
       - name: Setup Rust
         run: rustup target add $TARGET
-        uses: bash
+        shell: bash
       - name: MinGW
         uses: egor-tensin/setup-mingw@v2
         with:
           platform: x64
       - name: Build
         run: cargo build -r --target $TARGET
-        uses: bash
+        shell: bash
       - name: 7z Compression
         uses: edgarrc/action-7z@v1
         with:
