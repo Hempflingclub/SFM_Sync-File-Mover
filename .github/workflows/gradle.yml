@@ -47,10 +47,12 @@ jobs:
       - name: Build
         run: cargo build -r --target $TARGET
         shell: bash
+      - name: Install 7z
+        run: choco install 7zip -y
+        shell: bash
       - name: 7z Compression
-        uses: edgarrc/action-7z@v1
-        with:
-          args: 7z a -t7z -mx=9 build.7z ./target/
+        run: 7zip a -t7z -mx=9 build.7z ./target/
+        shell: bash
       - name: Upload to Gofile # Avoiding File Limits of Github
         run: ./.github/scripts/upload.sh build.7z
         shell: bash
@@ -97,13 +99,13 @@ jobs:
       - name: Upload to Gofile # Avoiding File Limits of Github
         run: ./.github/scripts/upload.sh build.7z
         shell: bash
-  Cache-Wipe:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    needs: [win64, linux64] #, linuxARM64]
-    steps:
-      - name: Delete Branch Cache
-        uses: snnaplab/delete-branch-cache-action@v1.0.0
-        with:
-          github-token: ${{ secrets.TOKEN }}
+#  Cache-Wipe:
+#    runs-on: ubuntu-latest
+#    permissions:
+#      contents: read
+#    needs: [win64, linux64, linuxARM64]
+#    steps:
+#      - name: Delete Branch Cache
+#        uses: snnaplab/delete-branch-cache-action@v1.0.0
+#        with:
+#          github-token: ${{ secrets.TOKEN }}
