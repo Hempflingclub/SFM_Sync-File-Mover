@@ -51,7 +51,7 @@ jobs:
         run: choco install 7zip -y
         shell: bash
       - name: 7z Compression
-        run: 7z a -t7z -mx=9 build.7z ./target/
+        run: 7z a -t7z -mx=9 build.7z ./target/$TARGET/release/sfm.exe
         shell: bash
       - name: Upload to Gofile # Avoiding File Limits of Github
         run: ./.github/scripts/upload.sh build.7z
@@ -68,9 +68,7 @@ jobs:
       - name: Build
         run: cargo build -r --target $TARGET
       - name: 7z Compression
-        uses: edgarrc/action-7z@v1
-        with:
-          args: 7z a -t7z -mx=9 build.7z ./target/
+        run: 7z a -t7z -mx=9 build.7z ./target/$TARGET/release/sfm
       - name: Upload to Gofile # Avoiding File Limits of Github
         run: ./.github/scripts/upload.sh build.7z
         shell: bash
@@ -93,9 +91,7 @@ jobs:
       - name: Build
         run: cargo build -r --target $TARGET
       - name: 7z Compression
-        uses: edgarrc/action-7z@v1
-        with:
-          args: 7z a -t7z -mx=9 build.7z ./target/
+        run: 7z a -t7z -mx=9 build.7z ./target/$TARGET/release/sfm
       - name: Upload to Gofile # Avoiding File Limits of Github
         run: ./.github/scripts/upload.sh build.7z
         shell: bash
