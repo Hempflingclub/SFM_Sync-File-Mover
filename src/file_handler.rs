@@ -1,3 +1,4 @@
+use std::ops::Add;
 use std::path::Path;
 use regex::Regex;
 
@@ -15,6 +16,8 @@ pub trait Mover {
     fn print_target_files(&self);
     fn get_file_paths(&self, path: &String) -> Vec<String>;
     fn is_part_of_pattern(&self, path: &String) -> bool;
+    fn move_targeted_files(&self, paths: Vec<String>);
+    fn move_files(&self);
 }
 
 impl Mover for MvObj {
@@ -51,7 +54,8 @@ impl Mover for MvObj {
                     match entry {
                         Ok(entry) => {
                             let raw_file_path = entry.path();
-                            let unfettered_file_path = raw_file_path.as_path().to_str();
+                            let real_file_path = raw_file_path.as_path();
+                            let unfettered_file_path = real_file_path.to_str();
                             let file_path: String;
                             if unfettered_file_path.is_some() {
                                 file_path = unfettered_file_path.unwrap().to_string();
@@ -59,7 +63,14 @@ impl Mover for MvObj {
                                 file_path = "".to_string();
                             }
                             if self.is_part_of_pattern(&file_path) {
-                                file_paths.insert(file_paths.len(), file_path);
+                                file_paths.insert(file_paths.len(), file_path.to_string());
+                            }
+                            if Path::is_dir(real_file_path) {
+                                let paths: Vec<String>;
+                                paths = self.get_file_paths(&file_path);
+                                for path in paths {
+                                    file_paths.insert(file_paths.len(), path);
+                                }
                             }
                         }
                         _ => { println!("Exception during Folder Scan") }
@@ -82,5 +93,60 @@ impl Mover for MvObj {
                 false
             }
         }
+    }
+
+    fn move_targeted_files(&self, paths: Vec<String>) {
+        for path in paths {
+            let source_path = Path::new(&*path);
+            let source_parent_folder_raw = Path::parent(source_path);
+            if !source_parent_folder_raw.is_some() {
+                println!("Error finding parent folder of: {}", source_path.display().to_string());
+                return;
+            }
+            let source_parent_folder = source_parent_folder_raw.unwrap();
+            let source_parent_relative_raw = Path::to_str(source_parent_folder);
+            if !source_parent_relative_raw.is_some() {
+                println!("Error finding relative folder of: {}", source_parent_folder.display().to_string());
+                return
+            }
+            let mut source_parent_relative = source_parent_relative_raw.unwrap();
+            source_parent_relative = &source_parent_relative[if source_parent_relative.len() > self.source.len() { self.source.len() + 1 } else { self.source.len() }..source_parent_relative.len()];
+            let mut source_parent_relative_string:String = source_parent_relative.to_string();
+            let target_parent_relative: String;
+            target_parent_relative = self.target.to_string().add(if self.target[self.target.len()..self.target.len()].eq("\\") { &*source_parent_relative_string } else {
+                source_parent_relative_string.insert_str(0, "\\");
+                &*source_parent_relative_string
+            });
+            let target_parent_relative_path = Path::new(target_parent_relative.as_str());
+            // Create relative Folder Path at Target
+            if !Path::exists(target_parent_relative_path){
+                std::fs::create_dir_all(target_parent_relative_path).expect(&*format!("Couldn't create relative path {}", target_parent_relative));
+            }
+            let filename:String;
+            if source_path.file_name().is_some(){
+                filename = source_path.file_name().unwrap().to_string_lossy().parse().unwrap();
+            }else{
+                println!("Error parsing Unicode of: {}",path);
+                return
+            }
+            let mut relative_filename:String;
+            relative_filename = filename.to_string();
+
+            let target_path_relative: String;
+            target_path_relative = target_parent_relative.to_string().add(if target_parent_relative[target_parent_relative.len()..target_parent_relative.len()].eq("\\") { &*relative_filename } else {
+                relative_filename.insert_str(0, "\\");
+                &*relative_filename
+            });
+            /*
+            TBD: Target File Path correctly determined
+            Copy File to target location
+            Check Checksum of source and target -> delete original
+             */
+            println!("relative: {}", target_path_relative);
+        }
+    }
+
+    fn move_files(&self) {
+        self.move_targeted_files(self.get_file_paths(&self.source))
     }
 }
