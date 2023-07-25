@@ -23,13 +23,8 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup Rust
-        uses: ATiltedTree/setup-rust@v1.0.5
-        with:
-          rust-version: stable
       - name: Testing
-        run: test=$(cargo run) && echo $output && echo $output >> $GITHUB_STEP_SUMMARY
+        run: output=$(cargo run) && echo $output && echo $output >> $GITHUB_STEP_SUMMARY
   win64:
     env:
       TARGET: x86_64-pc-windows-gnu
