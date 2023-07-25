@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io;
+use std::{io, path};
 use std::ops::Add;
 use std::path::Path;
 use regex::Regex;
@@ -126,8 +126,8 @@ impl Mover for MvObj {
             let mut source_parent_relative_string: String = source_parent_relative.to_string();
             let target_parent_relative: String;
             // Fixing Slash after target
-            target_parent_relative = self.target.to_string().add(if self.target.ends_with("\\") { &*source_parent_relative_string } else {
-                source_parent_relative_string.insert_str(0, "\\");
+            target_parent_relative = self.target.to_string().add(if self.target.ends_with(path::MAIN_SEPARATOR_STR) { &*source_parent_relative_string } else {
+                source_parent_relative_string.insert_str(0, path::MAIN_SEPARATOR_STR);
                 &*source_parent_relative_string
             });
             let target_parent_relative_path = Path::new(target_parent_relative.as_str());
@@ -147,8 +147,8 @@ impl Mover for MvObj {
 
             let target_path_relative: String;
             // Fixing Slash before filename
-            target_path_relative = target_parent_relative.to_string().add(if target_parent_relative.ends_with("\\") { &*relative_filename } else {
-                relative_filename.insert_str(0, "\\");
+            target_path_relative = target_parent_relative.to_string().add(if target_parent_relative.ends_with(path::MAIN_SEPARATOR_STR) { &*relative_filename } else {
+                relative_filename.insert_str(0, path::MAIN_SEPARATOR_STR);
                 &*relative_filename
             });
             let target_path_relative_path: &Path = Path::new(&*target_path_relative);
