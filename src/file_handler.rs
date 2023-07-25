@@ -168,6 +168,7 @@ impl Mover for MvObj {
             //Writer
             let target_file;
             if Path::is_dir(source_path) { continue; }
+            if Path::is_dir(target_path_relative_path) { continue; }
             if !Path::exists(target_path_relative_path) {
                 target_file = File::create(target_path_relative_path);
             } else {
