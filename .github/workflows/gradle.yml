@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Testing
-        run: cargo run > output && echo $(cat output) && echo $(cat output) >> $GITHUB_STEP_SUMMARY
+        run: echo $(cargo run) > output && echo $(cat output) && echo $(cat output) >> $GITHUB_STEP_SUMMARY
   win64:
     env:
       TARGET: x86_64-pc-windows-gnu
