@@ -96,6 +96,9 @@ impl Mover for MvObj {
     }
 
     fn move_targeted_files(&self, paths: Vec<String>) {
+        if !Path::exists(Path::new(&self.target)){
+            std::fs::create_dir_all(Path::new(&self.target)).expect(&*format!("Failed to create target folder {}",self.target));
+        }
         for path in paths {
             let source_path = Path::new(&*path);
             let source_parent_folder_raw = Path::parent(source_path);
