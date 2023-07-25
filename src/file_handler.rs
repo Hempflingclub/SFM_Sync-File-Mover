@@ -1,3 +1,5 @@
+use std::fs::File;
+use std::io;
 use std::ops::Add;
 use std::path::Path;
 use regex::Regex;
@@ -12,6 +14,7 @@ pub struct MvObj {
 pub trait Mover {
     fn create(source: String, target: String, pattern: String, exclude: bool) -> MvObj;
     fn create_ref_str(source: &str, target: &str, pattern: &str, exclude: bool) -> MvObj;
+    fn create_ref_str_default(source: &str, target: &str, exclude: bool) -> MvObj;
     fn print_src_files(&self);
     fn print_target_files(&self);
     fn get_file_paths(&self, path: &String) -> Vec<String>;
@@ -31,6 +34,9 @@ impl Mover for MvObj {
     }
     fn create_ref_str(source: &str, target: &str, pattern: &str, exclude: bool) -> MvObj {
         Self::create(source.to_string(), target.to_string(), pattern.to_string(), exclude)
+    }
+    fn create_ref_str_default(source: &str, target: &str, exclude: bool) -> MvObj {
+        Self::create_ref_str(source, target, ".*", exclude)
     }
     fn print_src_files(&self) {
         let paths: Vec<String> = self.get_file_paths(&self.source.to_string());
@@ -73,7 +79,10 @@ impl Mover for MvObj {
                                 }
                             }
                         }
-                        _ => { println!("Exception during Folder Scan") }
+                        _ => {
+                            println!("Exception during Folder Scan");
+                            continue;
+                        }
                     };
                 }
             }
@@ -96,56 +105,88 @@ impl Mover for MvObj {
     }
 
     fn move_targeted_files(&self, paths: Vec<String>) {
-        if !Path::exists(Path::new(&self.target)){
-            std::fs::create_dir_all(Path::new(&self.target)).expect(&*format!("Failed to create target folder {}",self.target));
+        if !Path::exists(Path::new(&self.target)) {
+            std::fs::create_dir_all(Path::new(&self.target)).expect(&*format!("Failed to create target folder {}", self.target));
         }
         for path in paths {
             let source_path = Path::new(&*path);
             let source_parent_folder_raw = Path::parent(source_path);
             if !source_parent_folder_raw.is_some() {
                 println!("Error finding parent folder of: {}", source_path.display().to_string());
-                return;
+                continue;
             }
             let source_parent_folder = source_parent_folder_raw.unwrap();
             let source_parent_relative_raw = Path::to_str(source_parent_folder);
             if !source_parent_relative_raw.is_some() {
                 println!("Error finding relative folder of: {}", source_parent_folder.display().to_string());
-                return
+                continue;
             }
             let mut source_parent_relative = source_parent_relative_raw.unwrap();
             source_parent_relative = &source_parent_relative[if source_parent_relative.len() > self.source.len() { self.source.len() + 1 } else { self.source.len() }..source_parent_relative.len()];
-            let mut source_parent_relative_string:String = source_parent_relative.to_string();
+            let mut source_parent_relative_string: String = source_parent_relative.to_string();
             let target_parent_relative: String;
-            target_parent_relative = self.target.to_string().add(if self.target[self.target.len()..self.target.len()].eq("\\") { &*source_parent_relative_string } else {
+            // Fixing Slash after target
+            target_parent_relative = self.target.to_string().add(if self.target.ends_with("\\") { &*source_parent_relative_string } else {
                 source_parent_relative_string.insert_str(0, "\\");
                 &*source_parent_relative_string
             });
             let target_parent_relative_path = Path::new(target_parent_relative.as_str());
             // Create relative Folder Path at Target
-            if !Path::exists(target_parent_relative_path){
+            if !Path::exists(target_parent_relative_path) {
                 std::fs::create_dir_all(target_parent_relative_path).expect(&*format!("Couldn't create relative path {}", target_parent_relative));
             }
-            let filename:String;
-            if source_path.file_name().is_some(){
+            let filename: String;
+            if source_path.file_name().is_some() {
                 filename = source_path.file_name().unwrap().to_string_lossy().parse().unwrap();
-            }else{
-                println!("Error parsing Unicode of: {}",path);
-                return
+            } else {
+                println!("Error parsing Unicode of: {}", path);
+                continue;
             }
-            let mut relative_filename:String;
+            let mut relative_filename: String;
             relative_filename = filename.to_string();
 
             let target_path_relative: String;
-            target_path_relative = target_parent_relative.to_string().add(if target_parent_relative[target_parent_relative.len()..target_parent_relative.len()].eq("\\") { &*relative_filename } else {
+            // Fixing Slash before filename
+            target_path_relative = target_parent_relative.to_string().add(if target_parent_relative.ends_with("\\") { &*relative_filename } else {
                 relative_filename.insert_str(0, "\\");
                 &*relative_filename
             });
+            let target_path_relative_path: &Path = Path::new(&*target_path_relative);
+            let source_file = File::open(source_path);
+            //Reader
+            let source_reader = match source_file {
+                Ok(source_file) => {
+                    let source_reader = io::BufReader::new(source_file);
+                    Some(source_reader)
+                }
+                _ => {
+                    println!("Failed to open file: {}", path);
+                    None
+                }
+            };
+            if !source_reader.is_some() { continue; }
+            //Writer
+            let target_file;
+            if !Path::exists(target_path_relative_path) {
+                target_file = File::create(target_path_relative_path);
+            } else {
+                target_file = File::open(target_path_relative_path);
+            }
+            let target_writer = match target_file {
+                Ok(target_file) => {
+                    let target_writer = io::BufWriter::new(target_file);
+                    Some(target_writer)
+                }
+                _ => {
+                    println!("Failed to write file: {}", target_path_relative);
+                    None
+                }
+            };
+            if !target_writer.is_some() { continue; }
+            std::io::copy(&mut source_reader.unwrap(), &mut target_writer.unwrap()).expect(&*format!("Failed to copy: {} | to: {}", path.to_string(), target_path_relative.to_string()));
             /*
-            TBD: Target File Path correctly determined
-            Copy File to target location
             Check Checksum of source and target -> delete original
              */
-            println!("relative: {}", target_path_relative);
         }
     }
 
