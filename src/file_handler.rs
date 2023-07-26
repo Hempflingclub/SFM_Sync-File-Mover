@@ -19,6 +19,7 @@ pub trait Mover {
     fn print_src_files(&self);
     fn print_target_files(&self);
     fn get_file_paths(&self, path: &String) -> Vec<String>;
+    fn get_file_paths_recursive(&self, path: &String) -> Vec<String>;
     fn is_part_of_pattern(&self, path: &String) -> bool;
     fn move_targeted_files(&self, paths: Vec<String>);
     fn move_files(&self);
@@ -72,13 +73,6 @@ impl Mover for MvObj {
                             if self.is_part_of_pattern(&file_path) {
                                 file_paths.insert(file_paths.len(), file_path.to_string());
                             }
-                            if Path::is_dir(real_file_path) {
-                                let paths: Vec<String>;
-                                paths = self.get_file_paths(&file_path);
-                                for path in paths {
-                                    file_paths.insert(file_paths.len(), path);
-                                }
-                            }
                         }
                         _ => {
                             println!("Exception during Folder Scan");
@@ -90,6 +84,22 @@ impl Mover for MvObj {
             _ => { println!("Exception during Folder Definition"); }
         };
         file_paths
+    }
+
+    fn get_file_paths_recursive(&self, path: &String) -> Vec<String> {
+        let paths = self.get_file_paths(path);
+        let mut total_paths: Vec<String> = vec![];
+        for p in paths {
+            total_paths.insert(total_paths.len(), p.to_string());
+            if Path::is_dir(Path::new(&*p)) {
+                let recursive_paths: Vec<String>;
+                recursive_paths = self.get_file_paths_recursive(&p);
+                for pp in recursive_paths {
+                    total_paths.insert(total_paths.len(), pp);
+                }
+            }
+        }
+        total_paths
     }
 
     fn is_part_of_pattern(&self, path: &String) -> bool {
@@ -204,6 +214,6 @@ impl Mover for MvObj {
     }
 
     fn move_files(&self) {
-        self.move_targeted_files(self.get_file_paths(&self.source))
+        self.move_targeted_files(self.get_file_paths_recursive(&self.source))
     }
 }
