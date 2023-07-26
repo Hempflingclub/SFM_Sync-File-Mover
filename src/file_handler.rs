@@ -2,6 +2,7 @@ use std::fs::File;
 use std::{io, path};
 use std::ops::Add;
 use std::path::Path;
+use checksum::crc::Crc;
 use regex::Regex;
 
 pub struct MvObj {
@@ -186,9 +187,19 @@ impl Mover for MvObj {
             };
             if !target_writer.is_some() { continue; }
             std::io::copy(&mut source_reader.unwrap(), &mut target_writer.unwrap()).expect(&*format!("Failed to copy: {} | to: {}", path.to_string(), target_path_relative.to_string()));
-            /*
-            Check Checksum of source and target -> delete original
-             */
+            let source_checksum = Crc::new(&*path);
+            let target_checksum = Crc::new(&*target_path_relative);
+            let file_to_delete: String;
+            let file_to_delete_path: &Path;
+            if !source_checksum.getsums().crc64.eq(&target_checksum.getsums().crc64) {
+                println!("Copy failed Checksum different, removing fragments");
+                file_to_delete = target_path_relative.to_string();
+            } else {
+                file_to_delete = path;
+            }
+            file_to_delete_path = Path::new(&*file_to_delete);
+            let remove_result = std::fs::remove_file(file_to_delete_path);
+            if !remove_result.is_ok() { println!("Failed to remove file {}", file_to_delete); }
         }
     }
 
