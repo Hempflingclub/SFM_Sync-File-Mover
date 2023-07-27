@@ -1,7 +1,8 @@
-use std::fs::File;
+use std::fs::{File, Metadata};
 use std::{io, path};
 use std::ops::Add;
 use std::path::Path;
+use std::time::SystemTime;
 use checksum::crc::Crc;
 use regex::Regex;
 
@@ -20,6 +21,8 @@ pub trait Mover {
     fn print_target_files(&self);
     fn get_file_paths(&self, path: &String) -> Vec<String>;
     fn get_file_paths_recursive(&self, path: &String) -> Vec<String>;
+    fn get_newest_timestamp(&self, path: &String) -> SystemTime;
+    fn get_newest_timestamp_recursive(&self, path: &String) -> SystemTime;
     fn is_part_of_pattern(&self, path: &String) -> bool;
     fn move_targeted_files(&self, paths: Vec<String>);
     fn move_files(&self);
@@ -100,6 +103,40 @@ impl Mover for MvObj {
             }
         }
         total_paths
+    }
+
+    fn get_newest_timestamp(&self, path: &String) -> SystemTime {
+        let mut timestamp = SystemTime::UNIX_EPOCH;
+        let file_path = Path::new(&*path);
+        let unfiltered_metadata = file_path.metadata();
+        let metadata: Metadata;
+        if unfiltered_metadata.is_ok() {
+            metadata = unfiltered_metadata.expect("Metadata Evaluation failed");
+        } else {
+            println!("Metadata evaluation failed on {}", path);
+            return timestamp;
+        }
+        let unfiltered_creation_time = metadata.created();
+        let unfiltered_write_time = metadata.modified();
+        if unfiltered_creation_time.is_ok() {
+            let creation_time = unfiltered_creation_time.unwrap();
+            if creation_time.gt(&timestamp) { timestamp = creation_time; }
+        }
+        if unfiltered_write_time.is_ok() {
+            let write_time = unfiltered_write_time.unwrap();
+            if write_time.gt(&timestamp) { timestamp = write_time; }
+        }
+        timestamp
+    }
+
+    fn get_newest_timestamp_recursive(&self, path: &String) -> SystemTime {
+        let mut timestamp = SystemTime::UNIX_EPOCH;
+        let files = self.get_file_paths_recursive(path);
+        for file in files {
+            let file_timestamp = self.get_newest_timestamp(&file);
+            if file_timestamp.gt(&timestamp) { timestamp = file_timestamp }
+        }
+        timestamp
     }
 
     fn is_part_of_pattern(&self, path: &String) -> bool {
