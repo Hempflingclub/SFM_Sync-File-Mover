@@ -1,5 +1,4 @@
 mod file_handler;
-mod filter;
 
 use crate::file_handler::{Mover, MvObj};
 

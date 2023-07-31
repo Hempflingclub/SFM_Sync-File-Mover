@@ -5,6 +5,7 @@ use std::path::Path;
 use std::time::SystemTime;
 use checksum::crc::Crc;
 use regex::Regex;
+mod filter;
 //use crate::filter;
 
 pub struct MvObj {
@@ -14,7 +15,7 @@ pub struct MvObj {
     pub exclude: bool,
 }
 
-pub trait Mover {
+pub(crate) trait Mover {
     fn create(source: String, target: String, pattern: String, exclude: bool) -> MvObj;
     fn create_ref_str(source: &str, target: &str, pattern: &str, exclude: bool) -> MvObj;
     fn create_ref_str_default(source: &str, target: &str, exclude: bool) -> MvObj;
