@@ -5,27 +5,26 @@ use std::path::Path;
 use std::time::SystemTime;
 use checksum::crc::Crc;
 use regex::Regex;
+
 mod filter;
-//use crate::filter;
 
 pub struct MvObj {
     pub source: String,
     pub target: String,
     pub pattern: String,
-    pub exclude: bool,
 }
 
 pub(crate) trait Mover {
-    fn create(source: String, target: String, pattern: String, exclude: bool) -> MvObj;
-    fn create_ref_str(source: &str, target: &str, pattern: &str, exclude: bool) -> MvObj;
-    fn create_ref_str_default(source: &str, target: &str, exclude: bool) -> MvObj;
+    fn create(source: String, target: String, pattern: String) -> MvObj;
+    fn create_ref_str(source: &str, target: &str, pattern: &str) -> MvObj;
+    fn create_ref_str_default(source: &str, target: &str) -> MvObj;
     fn print_src_files(&self);
     fn print_target_files(&self);
     fn get_file_paths(&self, path: &String) -> Vec<String>;
     fn get_file_paths_recursive(&self, path: &String) -> Vec<String>;
     fn get_newest_timestamp(&self, path: &String) -> SystemTime;
     fn get_newest_timestamp_recursive(&self, path: &String) -> SystemTime;
-    fn is_timestamp_older(&self, time: SystemTime, seconds:u64) -> bool;
+    fn is_timestamp_older(&self, time: SystemTime, seconds: u64) -> bool;
     fn should_move_main(&self) -> bool;
     fn should_move(&self, path: &String) -> bool;
     fn is_part_of_pattern(&self, path: &String) -> bool;
@@ -34,19 +33,18 @@ pub(crate) trait Mover {
 }
 
 impl Mover for MvObj {
-    fn create(source: String, target: String, pattern: String, exclude: bool) -> MvObj {
+    fn create(source: String, target: String, pattern: String) -> MvObj {
         MvObj {
             source,
             target,
             pattern,
-            exclude,
         }
     }
-    fn create_ref_str(source: &str, target: &str, pattern: &str, exclude: bool) -> MvObj {
-        Self::create(source.to_string(), target.to_string(), pattern.to_string(), exclude)
+    fn create_ref_str(source: &str, target: &str, pattern: &str) -> MvObj {
+        Self::create(source.to_string(), target.to_string(), pattern.to_string())
     }
-    fn create_ref_str_default(source: &str, target: &str, exclude: bool) -> MvObj {
-        Self::create_ref_str(source, target, ".*", exclude)
+    fn create_ref_str_default(source: &str, target: &str) -> MvObj {
+        Self::create_ref_str(source, target, ".*")
     }
     fn print_src_files(&self) {
         let paths: Vec<String> = self.get_file_paths(&self.source.to_string());
@@ -144,17 +142,17 @@ impl Mover for MvObj {
         timestamp
     }
 
-    fn is_timestamp_older(&self, time: SystemTime, seconds:u64) -> bool {
+    fn is_timestamp_older(&self, time: SystemTime, seconds: u64) -> bool {
         let current_time = SystemTime::now();
         if time.gt(&current_time) {
-            return false
+            return false;
         }
         let unfiltered_duration = current_time.duration_since(time);
-        match unfiltered_duration{
-            Ok(duration)=>{
+        match unfiltered_duration {
+            Ok(duration) => {
                 duration.as_secs() > seconds
             }
-            _=>{
+            _ => {
                 println!("Error parsing SystemTime");
                 false
             }
@@ -163,14 +161,11 @@ impl Mover for MvObj {
 
     fn should_move_main(&self) -> bool {
         let newest_timestamp = self.get_newest_timestamp_recursive(&self.source);
-        self.is_timestamp_older(newest_timestamp,600u64) // Base check if no file modified for 10minutes
+        self.is_timestamp_older(newest_timestamp, 600u64) // Base check if no file modified for 10minutes
     }
 
     fn should_move(&self, path: &String) -> bool {
-        // TODO: Implement in move function
-        // On a base by case basis, using new filter.rs
-        //let filter = Filter::create(path,&self.pattern);
-        todo!()
+        filter::use_filter(path, &self.pattern)
     }
 
     fn is_part_of_pattern(&self, path: &String) -> bool {
@@ -191,6 +186,7 @@ impl Mover for MvObj {
             std::fs::create_dir_all(Path::new(&self.target)).expect(&*format!("Failed to create target folder {}", self.target));
         }
         for path in paths {
+            if !self.should_move(&path) { continue; }
             let source_path = Path::new(&*path);
             let source_parent_folder_raw = Path::parent(source_path);
             if !source_parent_folder_raw.is_some() {
@@ -285,8 +281,8 @@ impl Mover for MvObj {
     }
 
     fn move_files(&self) {
-        if !self.should_move_main(){
-            return
+        if !self.should_move_main() {
+            return;
         }
         self.move_targeted_files(self.get_file_paths_recursive(&self.source))
     }

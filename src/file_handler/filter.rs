@@ -1,7 +1,7 @@
 use std::path::Path;
 use regex::Regex;
 
-pub(super) struct FilterObject {
+pub(self) struct FilterObject {
     path: String,
     filter: Vec<String>,
     is_regex: bool,
@@ -31,6 +31,12 @@ pub(self) enum FilterType {
     Invert,
     MatchAll,
     NONE,
+}
+
+/// Basically the interface to use filter
+pub(super) fn use_filter(path: &String, filter: &String) -> bool {
+    let filter = FilterObject::create(path, filter);
+    filter.is_in_filter()
 }
 
 fn split_arguments(filter: &String) -> Vec<String> {
@@ -77,8 +83,8 @@ impl Filter for FilterObject {
     fn create(path: &String, filter: &String) -> FilterObject {
         let is_regex: bool;
         let filter_list: Vec<String>;
-        if filter.starts_with("-") {
-            is_regex = false; // TODO: parse argument to check for inversion flag
+        if filter.starts_with("--") {
+            is_regex = false;
             filter_list = split_arguments(filter);
         } else {
             is_regex = true;
@@ -98,7 +104,7 @@ impl Filter for FilterObject {
     /// Will match all passed parameters in as a logical OR
     /// match_all will change behaviour to an logical AND
     fn handle_parameters(&self) -> bool {
-        let parameters:Vec<String> = self.filter.to_vec();
+        let parameters: Vec<String> = self.filter.to_vec();
         let mut matches_params: bool = false;
         let mut matches: Vec<bool> = vec![];
         let mut invert: bool = false;
