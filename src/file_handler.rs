@@ -200,7 +200,7 @@ impl Mover for MvObj {
                 continue;
             }
             let mut source_parent_relative = source_parent_relative_raw.unwrap();
-            source_parent_relative = &source_parent_relative[if source_parent_relative.len() > self.source.len() { self.source.len() + 1 } else { self.source.len() }..source_parent_relative.len()];
+            source_parent_relative = &source_parent_relative[if source_parent_relative.len() > self.source.len() { self.source.len() + 1 } else { self.source.len() }..=source_parent_relative.len()];
             let mut source_parent_relative_string: String = source_parent_relative.to_string();
             let target_parent_relative: String;
             // Fixing Slash after target
@@ -222,7 +222,6 @@ impl Mover for MvObj {
             }
             let mut relative_filename: String;
             relative_filename = filename.to_string();
-
             let target_path_relative: String;
             // Fixing Slash before filename
             target_path_relative = target_parent_relative.to_string().add(if target_parent_relative.ends_with(path::MAIN_SEPARATOR_STR) { &*relative_filename } else {

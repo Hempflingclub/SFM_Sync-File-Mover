@@ -44,7 +44,7 @@ fn split_arguments(filter: &String) -> Vec<String> {
     let mut old_index: usize = 0;
     for index in 0..filter.len() {
         if filter[index..index].eq(" ") {
-            let argument = (&*filter.to_string())[old_index..index].trim().to_string();
+            let argument = (&*filter.to_string())[old_index..=index].trim().to_string();
             arguments.insert(argument.len(), argument);
             old_index = index;
         }
@@ -111,9 +111,7 @@ impl Filter for FilterObject {
         let mut match_all: bool = false;
         for index in 0..parameters.len() {
             let parameter_slice = parameters[index..parameters.len()].to_vec();
-            let mut filter_type: FilterType = FilterType::NONE;
-            let mut params: Vec<String> = vec![];
-            (filter_type, params) = get_parameter(parameter_slice);
+            let (filter_type, params) = get_parameter(parameter_slice);
             match filter_type {
                 FilterType::StartsWith => {
                     matches.insert(matches.len(), self.start_with(&params[0]));
@@ -201,7 +199,7 @@ impl Filter for FilterObject {
             let slice = full_filename[index..index].to_string();
             if slice.eq(".") { last_index = index }
         }
-        filename = (&*full_filename)[0..(last_index - 1)].to_string();
+        filename = (&*full_filename)[0..last_index].to_string();
         filename
     }
 
