@@ -79,7 +79,7 @@ jobs:
         run: rustup target add $TARGET
       - name: Cross-Compile Dependency
         run: |
-          sudo apt-get install -qq crossbuild-essential-arm64 crossbuild-essential-armhf
+          sudo apt-get update && sudo apt-get install -qq crossbuild-essential-arm64 crossbuild-essential-armhf
           cat >>~/.cargo/config <<EOF
           [target.aarch64-unknown-linux-musl]
           linker = "aarch64-linux-gnu-gcc"
