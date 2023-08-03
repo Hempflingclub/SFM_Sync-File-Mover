@@ -40,8 +40,8 @@ impl Mover for MvObj {
             pattern,
         }
     }
-    fn create_ref_str(source: &str, target: &str, pattern: &str) -> MvObj {
-        Self::create(source.to_string(), target.to_string(), pattern.to_string())
+    fn create_ref_str(source: &str, target: &str, filter: &str) -> MvObj {
+        Self::create(source.to_string(), target.to_string(), filter.to_string())
     }
     fn create_ref_str_default(source: &str, target: &str) -> MvObj {
         Self::create_ref_str(source, target, ".*")
@@ -76,9 +76,8 @@ impl Mover for MvObj {
                             } else {
                                 file_path = "".to_string();
                             }
-                            if self.is_part_of_pattern(&file_path) {
-                                file_paths.insert(file_paths.len(), file_path.to_string());
-                            }
+                            file_paths.push( file_path.to_string());
+                            continue;
                         }
                         _ => {
                             println!("Exception during Folder Scan");
@@ -96,12 +95,12 @@ impl Mover for MvObj {
         let paths = self.get_file_paths(path);
         let mut total_paths: Vec<String> = vec![];
         for p in paths {
-            total_paths.insert(total_paths.len(), p.to_string());
+            total_paths.push(p.to_string());
             if Path::is_dir(Path::new(&*p)) {
                 let recursive_paths: Vec<String>;
                 recursive_paths = self.get_file_paths_recursive(&p);
                 for pp in recursive_paths {
-                    total_paths.insert(total_paths.len(), pp);
+                    total_paths.push(pp);
                 }
             }
         }
@@ -119,15 +118,18 @@ impl Mover for MvObj {
             println!("Metadata evaluation failed on {}", path);
             return timestamp;
         }
+        let timestamp_time_since_unix_epoch = timestamp.duration_since(SystemTime::UNIX_EPOCH).expect("Timestamp error").as_secs();
         let unfiltered_creation_time = metadata.created();
         let unfiltered_write_time = metadata.modified();
         if unfiltered_creation_time.is_ok() {
             let creation_time = unfiltered_creation_time.unwrap();
-            if creation_time.gt(&timestamp) { timestamp = creation_time; }
+            let time_since_unix_epoch = creation_time.duration_since(SystemTime::UNIX_EPOCH).expect("Timestamp error").as_secs();
+            if time_since_unix_epoch.gt(&timestamp_time_since_unix_epoch) { timestamp = creation_time; }
         }
         if unfiltered_write_time.is_ok() {
             let write_time = unfiltered_write_time.unwrap();
-            if write_time.gt(&timestamp) { timestamp = write_time; }
+            let time_since_unix_epoch = write_time.duration_since(SystemTime::UNIX_EPOCH).expect("Timestamp error").as_secs();
+            if time_since_unix_epoch.gt(&timestamp_time_since_unix_epoch) { timestamp = write_time; }
         }
         timestamp
     }
@@ -136,8 +138,10 @@ impl Mover for MvObj {
         let mut timestamp = SystemTime::UNIX_EPOCH;
         let files = self.get_file_paths_recursive(path);
         for file in files {
+            let timestamp_time_since_unix_epoch = timestamp.duration_since(SystemTime::UNIX_EPOCH).expect("Timestamp error").as_secs();
             let file_timestamp = self.get_newest_timestamp(&file);
-            if file_timestamp.gt(&timestamp) { timestamp = file_timestamp }
+            let file_time_since_unix_epoch = file_timestamp.duration_since(SystemTime::UNIX_EPOCH).expect("Timestamp error").as_secs();
+            if file_time_since_unix_epoch.gt(&timestamp_time_since_unix_epoch) { timestamp = file_timestamp }
         }
         timestamp
     }

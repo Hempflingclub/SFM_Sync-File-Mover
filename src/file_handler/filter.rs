@@ -45,7 +45,7 @@ fn split_arguments(filter: &String) -> Vec<String> {
     for index in 0..filter.len() {
         if filter[index..index].eq(" ") {
             let argument = (&*filter.to_string())[old_index..=index].trim().to_string();
-            arguments.insert(argument.len(), argument);
+            arguments.push(argument);
             old_index = index;
         }
     }
@@ -71,7 +71,7 @@ fn get_parameter(parameters: Vec<String>) -> (FilterType, Vec<String>) {
             }
         };
         for param in parameters[1..MAX_PARAMS as usize].to_vec() {
-            final_params.insert(final_params.len(), param);
+            final_params.push(param);
         }
     } else {
         filter_type = FilterType::NONE;
@@ -114,19 +114,19 @@ impl Filter for FilterObject {
             let (filter_type, params) = get_parameter(parameter_slice);
             match filter_type {
                 FilterType::StartsWith => {
-                    matches.insert(matches.len(), self.start_with(&params[0]));
+                    matches.push(self.start_with(&params[0]));
                 }
                 FilterType::EndsWith => {
-                    matches.insert(matches.len(), self.ends_with(&params[0]));
+                    matches.push(self.ends_with(&params[0]));
                 }
                 FilterType::EndsWithExt => {
-                    matches.insert(matches.len(), self.ends_with_ext(&params[0]));
+                    matches.push(self.ends_with_ext(&params[0]));
                 }
                 FilterType::Contains => {
-                    matches.insert(matches.len(), self.contains(&params[0]));
+                    matches.push(self.contains(&params[0]));
                 }
                 FilterType::ContainsXTimes => {
-                    matches.insert(matches.len(), self.contains_x_times(&params[0], params[1].parse::<u16>().expect("Failed to parse number from argument 'contains_x_times'")));
+                    matches.push(self.contains_x_times(&params[0], params[1].parse::<u16>().expect("Failed to parse number from argument 'contains_x_times'")));
                 }
                 FilterType::Invert => {
                     invert = true;
