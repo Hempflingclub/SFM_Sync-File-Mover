@@ -40,14 +40,16 @@ pub(super) fn use_filter(path: &String, filter: &String) -> bool {
 }
 
 fn split_arguments(filter: &String) -> Vec<String> {
-    let mut arguments: Vec<String> = vec![];
-    let mut old_index: usize = 0;
-    for index in 0..filter.len() {
-        if filter[index..index].eq(" ") {
-            let argument = (&*filter.to_string())[old_index..=index].trim().to_string();
-            arguments.push(argument);
-            old_index = index;
+    let arguments: Vec<String>;
+    let str_args:Vec<&str> = filter.trim().split(' ').collect();
+    if str_args.is_empty(){
+        arguments = vec![];
+    }else{
+        let mut string_args:Vec<String> = vec![];
+        for str in str_args{
+            string_args.push(str.trim().to_string());
         }
+        arguments = string_args;
     }
     arguments
 }

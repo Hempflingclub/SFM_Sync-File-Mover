@@ -3,8 +3,6 @@ use std::{io, path};
 use std::ops::Add;
 use std::path::Path;
 use std::time::SystemTime;
-use checksum::crc::Crc;
-use regex::Regex;
 
 mod filter;
 
@@ -27,7 +25,6 @@ pub(crate) trait Mover {
     fn is_timestamp_older(&self, time: SystemTime, seconds: u64) -> bool;
     fn should_move_main(&self) -> bool;
     fn should_move(&self, path: &String) -> bool;
-    fn is_part_of_pattern(&self, path: &String) -> bool;
     fn move_targeted_files(&self, paths: Vec<String>);
     fn move_files(&self);
 }
@@ -76,7 +73,7 @@ impl Mover for MvObj {
                             } else {
                                 file_path = "".to_string();
                             }
-                            file_paths.push( file_path.to_string());
+                            file_paths.push(file_path.to_string());
                             continue;
                         }
                         _ => {
@@ -172,18 +169,6 @@ impl Mover for MvObj {
         filter::use_filter(path, &self.pattern)
     }
 
-    fn is_part_of_pattern(&self, path: &String) -> bool {
-        let regex_pattern = Regex::new(self.pattern.as_str());
-        match regex_pattern {
-            Ok(regex_pattern) => {
-                regex_pattern.is_match(path.as_str())
-            }
-            _ => {
-                println!("Exception during Pattern initialisation");
-                false
-            }
-        }
-    }
 
     fn move_targeted_files(&self, paths: Vec<String>) {
         if !Path::exists(Path::new(&self.target)) {
@@ -204,7 +189,7 @@ impl Mover for MvObj {
                 continue;
             }
             let mut source_parent_relative = source_parent_relative_raw.unwrap();
-            source_parent_relative = &source_parent_relative[if source_parent_relative.len() > self.source.len() { self.source.len() + 1 } else { self.source.len() }..=source_parent_relative.len()];
+            source_parent_relative = &source_parent_relative[if source_parent_relative.len() > self.source.len() { self.source.len() + 1 } else { self.source.len() }..source_parent_relative.len()];
             let mut source_parent_relative_string: String = source_parent_relative.to_string();
             let target_parent_relative: String;
             // Fixing Slash after target
@@ -234,52 +219,78 @@ impl Mover for MvObj {
             });
             let target_path_relative_path: &Path = Path::new(&*target_path_relative);
             let source_file = File::open(source_path);
-            //Reader
-            let source_reader = match source_file {
-                Ok(source_file) => {
-                    let source_reader = io::BufReader::new(source_file);
-                    Some(source_reader)
+            if Path::is_dir(&source_path) {
+                //Check if folder is empty
+                let folder_content = source_path.read_dir();
+                if folder_content.is_err() {
+                    continue;
                 }
-                _ => {
-                    println!("Failed to open file: {}", path);
-                    None
+                let folder_content = folder_content.expect(&*format!("Error reading {}", path));
+                let file_cnt = folder_content.count();
+                if file_cnt > 0 {
+                    continue;
                 }
-            };
-            if !source_reader.is_some() { continue; }
-            //Writer
-            let target_file;
-            if Path::is_dir(source_path) { continue; }
-            if Path::is_dir(target_path_relative_path) { continue; }
-            if !Path::exists(target_path_relative_path) {
-                target_file = File::create(target_path_relative_path);
-            } else {
-                target_file = File::open(target_path_relative_path);
             }
-            let target_writer = match target_file {
-                Ok(target_file) => {
-                    let target_writer = io::BufWriter::new(target_file);
-                    Some(target_writer)
-                }
-                _ => {
-                    println!("Failed to write file: {}", target_path_relative);
-                    None
-                }
-            };
-            if !target_writer.is_some() { continue; }
-            std::io::copy(&mut source_reader.unwrap(), &mut target_writer.unwrap()).expect(&*format!("Failed to copy: {} | to: {}", path.to_string(), target_path_relative.to_string()));
-            let source_checksum = Crc::new(&*path);
-            let target_checksum = Crc::new(&*target_path_relative);
-            let file_to_delete: String;
+            //Copy only if file
+            let mut file_to_delete: String = path.to_string();
             let file_to_delete_path: &Path;
-            if !source_checksum.getsums().crc64.eq(&target_checksum.getsums().crc64) {
-                println!("Copy failed Checksum different, removing fragments");
-                file_to_delete = target_path_relative.to_string();
-            } else {
-                file_to_delete = path;
+            if Path::is_file(&source_path) {
+                //Reader
+                let source_reader = match source_file {
+                    Ok(source_file) => {
+                        let source_reader = io::BufReader::new(source_file);
+                        Some(source_reader)
+                    }
+                    _ => {
+                        println!("Failed to open file: {}", path);
+                        None
+                    }
+                };
+                if !source_reader.is_some() { continue; }
+                //Writer
+                let target_file;
+                if Path::is_dir(source_path) { continue; }
+                if Path::is_dir(target_path_relative_path) { continue; }
+                if !Path::exists(target_path_relative_path) {
+                    target_file = File::create(target_path_relative_path);
+                } else {
+                    target_file = File::open(target_path_relative_path);
+                }
+                let target_writer = match target_file {
+                    Ok(target_file) => {
+                        let target_writer = io::BufWriter::new(target_file);
+                        Some(target_writer)
+                    }
+                    _ => {
+                        println!("Failed to write file: {}", target_path_relative);
+                        None
+                    }
+                };
+                if !target_writer.is_some() { continue; }
+                std::io::copy(&mut source_reader.unwrap(), &mut target_writer.unwrap()).expect(&*format!("Failed to copy: {} | to: {}", path.to_string(), target_path_relative.to_string()));
+                /*
+                let mut source_checksum_obj = Crc::new(&*path);
+                let mut target_checksum_obj = Crc::new(&*target_path_relative);
+                 TODO: Choosing a working checksum library, that doesnt have Stackoverflow exceptions
+                let source_checksum = source_checksum_obj.checksum();
+                let target_checksum = target_checksum_obj.checksum();
+                if !(source_checksum.is_ok() || target_checksum.is_ok()) {
+                    println!("Checksum error");
+                    continue;
+                }
+                if !source_checksum.expect("Checksum error").crc64.eq(&target_checksum.expect("Checksum error").crc64) {
+                    println!("Copy failed Checksum different, removing fragments");
+                    file_to_delete = target_path_relative.to_string();
+                }
+                 */
             }
             file_to_delete_path = Path::new(&*file_to_delete);
-            let remove_result = std::fs::remove_file(file_to_delete_path);
-            if !remove_result.is_ok() { println!("Failed to remove file {}", file_to_delete); }
+            let remove_result = if Path::is_dir(source_path) {
+                std::fs::remove_dir(file_to_delete_path)
+            } else {
+                std::fs::remove_file(file_to_delete_path)
+            };
+            if !remove_result.is_ok() { println!("Failed to remove {} {}",{if Path::is_dir(source_path){"folder"}else{"file"}}, file_to_delete); }
         }
     }
 
