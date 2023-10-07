@@ -17,6 +17,7 @@ pub(self) trait Filter {
     fn ends_with_ext(&self, text: &String) -> bool;
     fn contains(&self, text: &String) -> bool;
     fn contains_x_times(&self, text: &String, amounts: u16) -> bool;
+    fn exact(&self, text:&String) -> bool;
     fn get_filename(&self) -> String;
     fn get_full_filename(&self) -> String;
     fn get_extension(&self) -> String;
@@ -28,6 +29,7 @@ pub(self) enum FilterType {
     EndsWithExt,
     Contains,
     ContainsXTimes,
+    Exact,
     Invert,
     MatchAll,
     NONE,
@@ -66,6 +68,7 @@ fn get_parameter(parameters: Vec<String>) -> (FilterType, Vec<String>) {
             "ends_with_ext" => { FilterType::EndsWithExt }
             "contains" => { FilterType::Contains }
             "contains_x_times" => { FilterType::ContainsXTimes }
+            "exact" => { FilterType::Exact }
             "invert" => { FilterType::Invert }
             "match_all" => { FilterType::MatchAll }
             _ => {
@@ -82,14 +85,8 @@ fn get_parameter(parameters: Vec<String>) -> (FilterType, Vec<String>) {
 }
 
 fn get_last_index(text: &String, character: char) -> usize {
-    let chars: Vec<char> = text.chars().collect();
-    for index in (0..text.len()).rev() {
-        let char = chars[index];
-        if char.eq(&character) {
-            return index;
-        }
-    }
-    0 //Not found
+    let last_index = text.rfind(character).unwrap_or(0); //chars.count() - chars.rev().position(|c| c == character).unwrap_or(chars.count() - 1) - 1; //To avoid Unicode errors: From with some tweaks to never throw an error: https://stackoverflow.com/questions/50101842/how-to-find-the-last-occurrence-of-a-char-in-a-string
+    return last_index;
 }
 
 impl Filter for FilterObject {
@@ -140,6 +137,9 @@ impl Filter for FilterObject {
                 }
                 FilterType::ContainsXTimes => {
                     matches.push(self.contains_x_times(&params[0], params[1].parse::<u16>().expect("Failed to parse number from argument 'contains_x_times'")));
+                }
+                FilterType::Exact => {
+                    matches.push(self.exact(&params[0]));
                 }
                 FilterType::Invert => {
                     invert = true;
@@ -204,6 +204,10 @@ impl Filter for FilterObject {
             counts += 1;
         }
         counts == amounts
+    }
+
+    fn exact(&self, text: &String) -> bool {
+        self.get_full_filename().eq(text)
     }
 
     fn get_filename(&self) -> String {
