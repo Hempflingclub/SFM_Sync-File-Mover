@@ -12,12 +12,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "checksum"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5c24f6a463e9973db3df3c2cc276f689f5baf289c87a693dc859e004d3eb45f"
-
-[[package]]
 name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -56,6 +50,5 @@ checksum = "e5ea92a5b6195c6ef2a0295ea818b312502c6fc94dde986c5553242e18fd4ce2"
 name = "sfm"
 version = "1.0.0"
 dependencies = [
- "checksum",
  "regex",
 ]
