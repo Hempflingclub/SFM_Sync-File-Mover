@@ -28,7 +28,7 @@ jobs:
         run: cargo run 2> output && echo $(cat output) && echo $(cat output) >> $GITHUB_STEP_SUMMARY
   win64:
     env:
-      TARGET: x86_64-pc-windows-gnu
+      TARGET: x86_64-pc-windows-msvc
     runs-on: windows-latest
     needs: test
     steps:
