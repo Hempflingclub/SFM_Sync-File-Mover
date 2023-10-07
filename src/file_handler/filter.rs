@@ -41,12 +41,12 @@ pub(super) fn use_filter(path: &String, filter: &String) -> bool {
 
 fn split_arguments(filter: &String) -> Vec<String> {
     let arguments: Vec<String>;
-    let str_args:Vec<&str> = filter.trim().split(' ').collect();
-    if str_args.is_empty(){
+    let str_args: Vec<&str> = filter.trim().split(' ').collect();
+    if str_args.is_empty() {
         arguments = vec![];
-    }else{
-        let mut string_args:Vec<String> = vec![];
-        for str in str_args{
+    } else {
+        let mut string_args: Vec<String> = vec![];
+        for str in str_args {
             string_args.push(str.trim().to_string());
         }
         arguments = string_args;
@@ -58,7 +58,7 @@ fn get_parameter(parameters: Vec<String>) -> (FilterType, Vec<String>) {
     let filter_type: FilterType;
     let mut final_params: Vec<String> = vec![];
     const MAX_PARAMS: u8 = 3u8; // May be adjusted in the future
-    if parameters[0].starts_with("--") && parameters.len().ge(&2) && parameters.len().le(&(MAX_PARAMS as usize)) {
+    if parameters[0].starts_with("--") && parameters.len().ge(&2) {
         let flag = &parameters[0][2..parameters[0].len()]; // Take Parameter slice off "--" and type_cast &str
         filter_type = match flag {
             "starts_with" => { FilterType::StartsWith }
@@ -72,13 +72,24 @@ fn get_parameter(parameters: Vec<String>) -> (FilterType, Vec<String>) {
                 FilterType::NONE
             }
         };
-        for param in parameters[1..MAX_PARAMS as usize].to_vec() {
+        for param in parameters[1..(if parameters.len().ge(&(MAX_PARAMS as usize)) { MAX_PARAMS as usize } else { parameters.len() })].to_vec() {
             final_params.push(param);
         }
     } else {
         filter_type = FilterType::NONE;
     }
     (filter_type, final_params)
+}
+
+fn get_last_index(text: &String, character: char) -> usize {
+    let chars: Vec<char> = text.chars().collect();
+    for index in (0..text.len()).rev() {
+        let char = chars[index];
+        if char.eq(&character) {
+            return index;
+        }
+    }
+    0 //Not found
 }
 
 impl Filter for FilterObject {
@@ -148,7 +159,7 @@ impl Filter for FilterObject {
                 break;
             }
         }
-        matches_params && !invert
+        matches_params == !invert //Bi-junction
     }
 
 
@@ -178,7 +189,9 @@ impl Filter for FilterObject {
     }
 
     fn contains(&self, text: &String) -> bool {
-        self.get_filename().contains(text)
+        let filename = self.get_filename();
+        let lowercase = filename.to_lowercase();
+        lowercase.contains(text)
     }
 
     fn contains_x_times(&self, text: &String, amounts: u16) -> bool {
@@ -196,11 +209,9 @@ impl Filter for FilterObject {
     fn get_filename(&self) -> String {
         let filename: String;
         let full_filename = self.get_full_filename();
-        let mut last_index: usize = 0;
-        for index in 0..full_filename.len() {
-            let slice = full_filename[index..index].to_string();
-            if slice.eq(".") { last_index = index }
-        }
+        let last_index: usize;
+        const CHECK_CHAR: char = '.';
+        last_index = get_last_index(&full_filename, CHECK_CHAR);
         filename = (&*full_filename)[0..last_index].to_string();
         filename
     }
@@ -225,12 +236,10 @@ impl Filter for FilterObject {
     fn get_extension(&self) -> String {
         let extension: String;
         let full_filename = self.get_full_filename();
-        let mut last_index: usize = 0;
-        for index in 0..full_filename.len() {
-            let slice = full_filename[index..index].to_string();
-            if slice.eq(".") { last_index = index }
-        }
-        extension = (&*full_filename)[(last_index + 1)..full_filename.len()].to_string();
+        let last_index: usize;
+        const CHECK_CHAR: char = '.';
+        last_index = get_last_index(&full_filename, CHECK_CHAR);
+        extension = if last_index != 0 { (&*full_filename)[(last_index + 1)..full_filename.len()].to_string() } else { "".to_string() };
         extension
     }
 }

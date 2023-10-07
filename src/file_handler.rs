@@ -232,7 +232,7 @@ impl Mover for MvObj {
                 }
             }
             //Copy only if file
-            let mut file_to_delete: String = path.to_string();
+            let file_to_delete: String = path.to_string();
             let file_to_delete_path: &Path;
             if Path::is_file(&source_path) {
                 //Reader
@@ -290,7 +290,7 @@ impl Mover for MvObj {
             } else {
                 std::fs::remove_file(file_to_delete_path)
             };
-            if !remove_result.is_ok() { println!("Failed to remove {} {}",{if Path::is_dir(source_path){"folder"}else{"file"}}, file_to_delete); }
+            if !remove_result.is_ok() { println!("Failed to remove {} {}", { if Path::is_dir(source_path) { "folder" } else { "file" } }, file_to_delete); }
         }
     }
 
