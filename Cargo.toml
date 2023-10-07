@@ -15,5 +15,5 @@ debug = 0
 debug-assertions = false
 lto = true
 incremental = false
-strip = true
-codegen-units = 1
+#strip = true
+#codegen-units = 1
